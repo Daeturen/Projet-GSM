@@ -58,7 +58,7 @@ int main(int argc, char const *argv[])
 
 			if (!actRead)
 			{
-	    		cout << "ERREUR Action.act";
+	    		cout << "ERREUR Ouverture Action.act";
 			}
 		}
 		while(file_empty(actRead));
@@ -79,14 +79,13 @@ int main(int argc, char const *argv[])
      	 	transform(ligne.begin(), ligne.end(), ligne.begin(), ::tolower); //met ligne en minuscule
      	 	if(ligne.find(ACTIONVALIDE) != string::npos)
      	 	{
-
      	 		action = ligne;
      	 		break;
      	 	}
      	 }
 
-     	 if(ligne.find(ACTIONVALIDE) != string::npos) //Code a ameliorer
-     	 {
+     	if(ligne.find(ACTIONVALIDE) != string::npos) //Code a ameliorer
+     	{
      	 	if(ligne.find(ACTION_1_ON) != string::npos)
      	 	{
      	 		digitalWrite(0 , HIGH);
@@ -157,9 +156,31 @@ int main(int argc, char const *argv[])
      	 		digitalWrite(6 , LOW);
      	 		repond = ACTION_7_OFF;
      	 	}
-     	 }
+     	}
+		else
+		{
+			repond = "There is an error (Syntax non respéctée)";
+		}
 
      	 actRead.close();
+		 actWrite("cfg/action.act");  //clear du fichier action.act
+		if (!actWrite)
+		{
+	    	cout << "ERREUR clear action.act";
+		}
+		 actWrite.close();
+		 
+		 actWrite.open("cfg/sms.envoi");
+		if (actWrite)
+		{
+			actWrite << "Action " << repond << "éfféctuée" << end1;
+		}
+		else
+		{
+			cout << "ERREUR Ouverture sms.envoi";
+		}
+		actWrite.close();
+
      	 delay(5000);
 
 	}
