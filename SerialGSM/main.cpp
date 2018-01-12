@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <wiringSerial.h>
 #include <wiringPi.h>
-#include <string.h>
+#include <string>
 
 #define TIMEOUT 200000
 
@@ -92,7 +92,7 @@ int main()
                 nbr_sms_recu = NbrSmsGsm(fd_serie);
                 while(nbr_sms_recu!=0)
                 {
-                    bufferSMS = ReadSMS(nbr_sms_recu);
+                    bufferSMS = ReadSMS(nbr_sms_recu, fd_serie);
 
                     ///ECRITURE FICHIER///
                     file_smsrecept.open("cfg/sms.recept", std::ios_base::app);
@@ -100,7 +100,7 @@ int main()
                     file_smsrecept.close();
                     bufferSMS = "";
 
-                    if(DeleteSMS(nbr_sms_recu)==0)
+                    if(DeleteSMS(nbr_sms_recu,fd_serie)==0)
                     {
                         nbr_sms_recu -= 1;
                     }
@@ -113,7 +113,7 @@ int main()
                     getline(file_smsenvoi, bufferSMSenvoi);
                 }
                 file_smsenvoi.close();
-                SendSMS("0768588348", bufferSMSenvoi, fd);
+                SendSMS("0768588348", bufferSMSenvoi, fd_serie);
                 bufferSMSenvoi = "";
             }
             //On reteste si le systeme est actif
@@ -130,6 +130,7 @@ int main()
 
 unsigned char InitGSM(int fd)
 {
+    int cptserial = 0;
     string reponse("");
     unsigned char res = -1, err=0;
 
@@ -146,6 +147,7 @@ unsigned char InitGSM(int fd)
       reponse += serialGetchar(fd);
       delayMicroseconds(83);
     }
+    cptserial = 0;
     //TEST REPONSE GSM
     if(reponse.find("OK") == string::npos)
     {
@@ -165,6 +167,7 @@ unsigned char InitGSM(int fd)
       reponse += serialGetchar(fd);
       delayMicroseconds(83);
     }
+    cptserial = 0;
     //TEST REPONSE GSM
     if(reponse.find("OK") == string::npos)
     {
@@ -184,6 +187,7 @@ unsigned char InitGSM(int fd)
       reponse += serialGetchar(fd);
       delayMicroseconds(83);
     }
+    cptserial = 0;
     //TEST REPONSE GSM
     if(reponse.find("OK") == string::npos)
     {
