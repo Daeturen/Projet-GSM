@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <wiringSerial.h>
 #include <wiringPi.h>
+#include <string.h>
 
 #define TIMEOUT 200000
 
@@ -10,13 +11,17 @@ using namespace std;
 
 unsigned char InitGSM(int fd);
 char GetEtatSys();
-unsigned char NbrSmsGsm(int fd);
+int NbrSmsGsm(int fd);
+string ReadSMS(unsigned char id, int fd);
+bool DeleteSMS(unsigned char id, int fd);
+bool SendSMS(string numero, string texte, int fd);
 
 int main()
 {
     char etat_sys = '2';
-    char res_init_gsm = -1, nbr_sms_recu=0;
-    int fd_serie = -3, err_init=0;
+    char res_init_gsm = -1;
+    int fd_serie = -3, err_init=0, nbr_sms_recu=0;
+    string bufferSMS("");
     FILE* file_etat_sys = NULL;
     wiringPiSetup(); //INIT WIRINGPI
 
@@ -76,11 +81,23 @@ int main()
         {
             if(etat_sys=='1') //Si le systeme actif
             {
-                nbr_sms_recu = NbrSmsGsm(fd_serie);
-                if(nbr_sms_recu!=0)
-                {
 
+                /// PARTIE LECTURE SMS
+                nbr_sms_recu = NbrSmsGsm(fd_serie);
+                while(nbr_sms_recu!=0)
+                {
+                    bufferSMS = ReadSMS(nbr_sms_recu);
+
+                    ///ECRITURE FICHIER///
+
+                    if(DeleteSMS(nbr_sms_recu)==0)
+                    {
+                        nbr_sms_recu -= 1;
+                    }
                 }
+
+                /// PARTIE ENVOI SMS
+
 
             }
             //On reteste si le systeme est actif
@@ -98,7 +115,9 @@ int main()
 unsigned char InitGSM(int fd)
 {
     string reponse("");
-    unsigned char res = -1;
+    unsigned char res = -1, err=0;
+
+    ///INIT MODEM///
     serialPuts (fd, "AT&F");
     serialPutchar(fd, 0x0D); //CF
     serialPutchar(fd, 0x0A); //LF
@@ -112,11 +131,57 @@ unsigned char InitGSM(int fd)
       delayMicroseconds(83);
     }
     //TEST REPONSE GSM
-    if(reponse.find("OK") != string::npos)
+    if(reponse.find("OK") == string::npos)
+    {
+        err++;
+    }
+
+    ///FORMAT NUMERIQUE PR REPONSE MODEM///
+    serialPuts (fd, "AT+CMEE=1");
+    serialPutchar(fd, 0x0D); //CF
+    serialPutchar(fd, 0x0A); //LF
+    while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
+    {
+		delayMicroseconds(83);
+	}
+    while (serialDataAvail (fd))
+    {
+      reponse += serialGetchar(fd);
+      delayMicroseconds(83);
+    }
+    //TEST REPONSE GSM
+    if(reponse.find("OK") == string::npos)
+    {
+        err++; //erreur
+    }
+
+    ///FORMAT TEXTE PR REPONSE MODEM///
+    serialPuts (fd, "AT+CMGF=1");
+    serialPutchar(fd, 0x0D); //CF
+    serialPutchar(fd, 0x0A); //LF
+    while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
+    {
+		delayMicroseconds(83);
+	}
+    while (serialDataAvail (fd))
+    {
+      reponse += serialGetchar(fd);
+      delayMicroseconds(83);
+    }
+    //TEST REPONSE GSM
+    if(reponse.find("OK") == string::npos)
+    {
+        err++; //erreur
+    }
+
+    if(err!=0)
+    {
+        res = 1;
+    }
+    else
     {
         res = 0;
     }
-
     return res;
 }
 
@@ -128,11 +193,11 @@ char GetEtatSys()
     return etatsys;
 }
 
-unsigned char NbrSmsGsm(int fd)
+int NbrSmsGsm(int fd)
 {
     int cptserial = 0;
     string reponse("");
-    unsigned char nbr_sms = 0;
+    int nbr_sms = 0;
     serialPuts (fd, "AT+CPMS=\"MT\""); // interrogation nbr sms reçus
     serialPutchar(fd, 0x0D); //CR
     serialPutchar(fd, 0x0A); //LF
@@ -146,6 +211,91 @@ unsigned char NbrSmsGsm(int fd)
       delayMicroseconds(83);
     }
 
-    ///analyse reponse
+    ///analyse reponse provisoire
+    nbr_sms=stoi(reponse);
     return nbr_sms;
+}
+
+string ReadSMS(unsigned char id, int fd)
+{
+    string commande("AT+CMGR=");
+    int cptserial = 0;
+    string reponse("");
+    commande += id;
+    serialPuts (fd, commande.c_str());
+    serialPutchar(fd, 0x0D); //CR
+    serialPutchar(fd, 0x0A); //LF
+    while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
+    {
+		delayMicroseconds(83);
+	}
+    while (serialDataAvail (fd))
+    {
+      reponse += serialGetchar(fd);
+      delayMicroseconds(83);
+    }
+    return reponse;
+}
+
+bool DeleteSMS(unsigned char id, int fd)
+{
+    string commande("AT+CMGD=");
+    int cptserial = 0;
+    string reponse("");
+    commande += id;
+    serialPuts (fd, commande.c_str());
+    serialPutchar(fd, 0x0D); //CR
+    serialPutchar(fd, 0x0A); //LF
+    while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
+    {
+		delayMicroseconds(83);
+	}
+    while (serialDataAvail (fd))
+    {
+      reponse += serialGetchar(fd);
+      delayMicroseconds(83);
+    }
+    if(reponse.find("OK") != string::npos)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+bool SendSMS(string numero, string texte,int fd)
+{
+    string commande("AT+CMGS=\"");
+    string reponse("");
+    int cptserial = 0;
+    commande += numero + "\"";
+    /// ON ENVOIE LE NUMERO DU SMS
+    serialPuts (fd, commande.c_str());
+    serialPutchar(fd, 0x0D); //CR
+    serialPutchar(fd, 0x0A); //LF
+    while((serialDataAvail (fd))){} // On attend que le modem reponde ">"
+    texte += 0x1A; // on rajoute ^Z a la fin (datasheet)
+    /// ON ENVOIE LE TEXTE DU SMS
+    serialPuts (fd, texte.c_str());
+    serialPutchar(fd, 0x0D); //CR
+    serialPutchar(fd, 0x0A); //LF
+    while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
+    {
+		delayMicroseconds(83);
+	}
+    while (serialDataAvail (fd))
+    {
+      reponse += serialGetchar(fd);
+      delayMicroseconds(83);
+    }
+    if(reponse.find("CMGS") != string::npos)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
 }
