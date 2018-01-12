@@ -60,17 +60,20 @@ int main(int argc, char const *argv[])
 			{
 	    		cout << "ERREUR Ouverture sms.recept";
 			}
+			if (file_empty(actRead))
+			{
+			cout << "Fichier sms.recept vide";
 		}
 		while(file_empty(actRead));
 
-		while(getline(actRead, ligne))
+	/*	while(getline(actRead, ligne))
      	 {
      	 	if(ligne.find(NUMERO))
      	 	{
      	 		numTel = ligne;
      	 		break;
      	 	}
-     	 }
+     	 }*/
 
      	 // TODO : Numero valide ? (trouver comment extraire le numero du string numTel)
 
