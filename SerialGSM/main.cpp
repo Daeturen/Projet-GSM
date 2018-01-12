@@ -232,7 +232,7 @@ int NbrSmsGsm(int fd)
     }
 
     ///analyse reponse provisoire
-    nbr_sms=stoi(reponse);
+    nbr_sms=atoi(reponse.c_str());
     return nbr_sms;
 }
 
