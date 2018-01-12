@@ -4,6 +4,7 @@
 #include <wiringSerial.h>
 #include <wiringPi.h>
 #include <string>
+#include <cstdlib>
 
 #define TIMEOUT 200000
 
@@ -78,7 +79,7 @@ int main()
         cout << "OK.";
     }
     etat_sys = GetEtatSys();
-    printf("\nEtat du systeme : %c",etat_sys);
+    cout << "\nEtat du systeme :" << etat_sys;
 
     // BOUCLE PRINCIPALE //
     if(err_init==0) // Pas d'erreurs != systeme eteint
@@ -92,6 +93,7 @@ int main()
                 nbr_sms_recu = NbrSmsGsm(fd_serie);
                 while(nbr_sms_recu!=0)
                 {
+                    cout << endl << nbr_sms_recu << " SMS recus.";
                     bufferSMS = ReadSMS(nbr_sms_recu, fd_serie);
 
                     ///ECRITURE FICHIER///
@@ -104,6 +106,10 @@ int main()
                     {
                         nbr_sms_recu -= 1;
                     }
+                    else
+                    {
+                        cout << "\nErreur suppression SMS.";
+                    }
                 }
 
                 /// PARTIE ENVOI SMS
@@ -112,12 +118,21 @@ int main()
                 {
                     getline(file_smsenvoi, bufferSMSenvoi);
                 }
+                else
+                {
+                    cout << "\nAucun SMS a envoyer.";
+                }
                 file_smsenvoi.close();
                 SendSMS("0768588348", bufferSMSenvoi, fd_serie);
                 bufferSMSenvoi = "";
             }
+            else
+            {
+                cout << "\nSysteme inactif.";
+            }
             //On reteste si le systeme est actif
             etat_sys = GetEtatSys();
+            cout << "\nEtat du systeme :" << etat_sys;
             delay(5000);
         }
     }
@@ -207,6 +222,7 @@ unsigned char InitGSM(int fd)
 
 char GetEtatSys()
 {
+    cout << "\nAppel fonction GetEtatSys()";
 	ifstream etat("cfg/etatsys.cfg");
     char etatsys = 0;
     etat.get(etatsys);
@@ -215,6 +231,7 @@ char GetEtatSys()
 
 int NbrSmsGsm(int fd)
 {
+    cout << "\nAppel fonction NbrSmsGsm()";
     int cptserial = 0;
     string reponse("");
     int nbr_sms = 0;
@@ -238,6 +255,7 @@ int NbrSmsGsm(int fd)
 
 string ReadSMS(unsigned char id, int fd)
 {
+    cout << "\nAppel fonction ReadSMS()";
     string commande("AT+CMGR=");
     int cptserial = 0;
     string reponse("");
@@ -259,6 +277,7 @@ string ReadSMS(unsigned char id, int fd)
 
 bool DeleteSMS(unsigned char id, int fd)
 {
+    cout << "\nAppel fonction DeleteSMS()";
     string commande("AT+CMGD=");
     int cptserial = 0;
     string reponse("");
@@ -287,6 +306,7 @@ bool DeleteSMS(unsigned char id, int fd)
 
 bool SendSMS(string numero, string texte,int fd)
 {
+    cout << "\nAppel fonction SendSMS()";
     string commande("AT+CMGS=\"");
     string reponse("");
     int cptserial = 0;
