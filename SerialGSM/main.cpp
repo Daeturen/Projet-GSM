@@ -15,6 +15,7 @@ int NbrSmsGsm(int fd);
 string ReadSMS(unsigned char id, int fd);
 bool DeleteSMS(unsigned char id, int fd);
 bool SendSMS(string numero, string texte, int fd);
+bool file_empty(ifstream& pFile);
 
 int main()
 {
@@ -22,7 +23,12 @@ int main()
     char res_init_gsm = -1;
     int fd_serie = -3, err_init=0, nbr_sms_recu=0;
     string bufferSMS("");
+    string bufferSMSenvoi("");
     FILE* file_etat_sys = NULL;
+    ofstream file_smsrecept;
+    ifstream file_smsenvoi;
+
+
     wiringPiSetup(); //INIT WIRINGPI
 
     // Initialisation port série
@@ -89,6 +95,10 @@ int main()
                     bufferSMS = ReadSMS(nbr_sms_recu);
 
                     ///ECRITURE FICHIER///
+                    file_smsrecept.open("cfg/sms.recept", std::ios_base::app);
+                    file_smsrecept << bufferSMS << endl;
+                    file_smsrecept.close();
+                    bufferSMS = "";
 
                     if(DeleteSMS(nbr_sms_recu)==0)
                     {
@@ -97,8 +107,14 @@ int main()
                 }
 
                 /// PARTIE ENVOI SMS
-
-
+                file_smsenvoi.open("cfg/sms.envoi");
+                if(!file_empty(file_smsenvoi))
+                {
+                    getline(file_smsenvoi, bufferSMSenvoi);
+                }
+                file_smsenvoi.close();
+                SendSMS("0768588348", bufferSMSenvoi, fd);
+                bufferSMSenvoi = "";
             }
             //On reteste si le systeme est actif
             etat_sys = GetEtatSys();
@@ -298,4 +314,9 @@ bool SendSMS(string numero, string texte,int fd)
     {
         return 1;
     }
+}
+
+bool file_empty(ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
 }
