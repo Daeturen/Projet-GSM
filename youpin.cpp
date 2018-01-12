@@ -54,11 +54,11 @@ int main(int argc, char const *argv[])
 			}
 			while(stateSys != '1');
 			
-			actRead.open("cfg/action.act");
+			actRead.open("cfg/sms.recept");
 
 			if (!actRead)
 			{
-	    		cout << "ERREUR Ouverture Action.act";
+	    		cout << "ERREUR Ouverture sms.recept";
 			}
 		}
 		while(file_empty(actRead));
@@ -163,10 +163,10 @@ int main(int argc, char const *argv[])
 		}
 
      	 actRead.close();
-		 actWrite("cfg/action.act");  //clear du fichier action.act
+		 actWrite("cfg/sms.recept");  //clear du fichier action.act
 		if (!actWrite)
 		{
-	    	cout << "ERREUR clear action.act";
+	    	cout << "ERREUR clear sms.recept";
 		}
 		 actWrite.close();
 		 
@@ -202,3 +202,14 @@ bool file_empty(ifstream& pFile)
 {
     return pFile.peek() == std::ifstream::traits_type::eof();
 }
+
+/*string first_numberstring(string const & str)
+{
+  size_t const n = str.find_first_of("0123456789");
+  if (n != string::npos)
+  {
+    std::size_t const m = str.find_first_not_of("0123456789", n);
+    return str.substr(n, m != string::npos ? m-n : m);
+  }
+  return std::string();
+}*/
