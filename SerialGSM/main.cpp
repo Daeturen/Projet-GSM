@@ -5,6 +5,9 @@
 #include <wiringPi.h>
 #include <string>
 #include <cstdlib>
+#include <iomanip>
+#include <locale>
+#include <sstream>
 
 #define TIMEOUT 200000
 
@@ -13,8 +16,8 @@ using namespace std;
 unsigned char InitGSM(int fd);
 char GetEtatSys();
 int NbrSmsGsm(int fd);
-string ReadSMS(unsigned char id, int fd);
-bool DeleteSMS(unsigned char id, int fd);
+string ReadSMS(int id, int fd);
+bool DeleteSMS(int id, int fd);
 bool SendSMS(string numero, string texte, int fd);
 bool file_empty(ifstream& pFile);
 
@@ -32,13 +35,13 @@ int main()
 
     wiringPiSetup(); //INIT WIRINGPI
 
-    // Initialisation port série
+    // Initialisation port sï¿½rie
     cout << "\nInitialisation port serie... ";
     fd_serie = serialOpen ("/dev/ttyAMA0", 9600);
     if(fd_serie<0)
     {
         err_init++;
-        file_etat_sys = fopen("cfg/etatsys.cfg", "w+"); //ouverture en écriture + supp contenu fichier
+        file_etat_sys = fopen("cfg/etatsys.cfg", "w+"); //ouverture en ï¿½criture + supp contenu fichier
         if(file_etat_sys!=NULL)
         {
             fputc('0', file_etat_sys);
@@ -62,7 +65,7 @@ int main()
     if(res_init_gsm!=0)
     {
         err_init++;
-        file_etat_sys = fopen("cfg/etatsys.cfg", "w+"); //ouverture en écriture + supp contenu fichier
+        file_etat_sys = fopen("cfg/etatsys.cfg", "w+"); //ouverture en ï¿½criture + supp contenu fichier
         if(file_etat_sys!=NULL)
         {
             fputc('0', file_etat_sys);
@@ -117,14 +120,20 @@ int main()
                 if(!file_empty(file_smsenvoi))
                 {
                     getline(file_smsenvoi, bufferSMSenvoi);
+                    SendSMS("0768588348", bufferSMSenvoi, fd_serie);
+                    bufferSMSenvoi = "";
+
                 }
                 else
                 {
                     cout << "\nAucun SMS a envoyer.";
                 }
                 file_smsenvoi.close();
-                SendSMS("0768588348", bufferSMSenvoi, fd_serie);
-                bufferSMSenvoi = "";
+                file_smsrecept.open("cfg/sms.envoi", ios::trunc);
+				file_smsrecept.close();
+                
+                
+                
             }
             else
             {
@@ -235,7 +244,7 @@ int NbrSmsGsm(int fd)
     int cptserial = 0;
     string reponse("");
     int nbr_sms = 0;
-    serialPuts (fd, "AT+CPMS=\"MT\""); // interrogation nbr sms reçus
+    serialPuts (fd, "AT+CPMS=\"MT\""); // interrogation nbr sms reï¿½us
     serialPutchar(fd, 0x0D); //CR
     serialPutchar(fd, 0x0A); //LF
     while(((serialDataAvail (fd)) <= 0)&&(cptserial<TIMEOUT)) // on attend qu'il y ait des data
@@ -253,13 +262,13 @@ int NbrSmsGsm(int fd)
     return nbr_sms;
 }
 
-string ReadSMS(unsigned char id, int fd)
+string ReadSMS(int id, int fd)
 {
     cout << "\nAppel fonction ReadSMS()";
     string commande("AT+CMGR=");
     int cptserial = 0;
-    string reponse("");
-    commande += id;
+    string reponse("");        
+	commande += static_cast<ostringstream*>( &(ostringstream() << id) )->str();
     serialPuts (fd, commande.c_str());
     serialPutchar(fd, 0x0D); //CR
     serialPutchar(fd, 0x0A); //LF
@@ -275,13 +284,13 @@ string ReadSMS(unsigned char id, int fd)
     return reponse;
 }
 
-bool DeleteSMS(unsigned char id, int fd)
+bool DeleteSMS(int id, int fd)
 {
     cout << "\nAppel fonction DeleteSMS()";
     string commande("AT+CMGD=");
     int cptserial = 0;
     string reponse("");
-    commande += id;
+	commande += static_cast<ostringstream*>( &(ostringstream() << id) )->str();
     serialPuts (fd, commande.c_str());
     serialPutchar(fd, 0x0D); //CR
     serialPutchar(fd, 0x0A); //LF
