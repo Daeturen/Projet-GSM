@@ -1,0 +1,25 @@
+
+Fri Feb  2 14:26:52 2018
+ : 
+Fri Feb  2 14:26:52 2018
+ : 
+Initialisation port serie... 
+Fri Feb  9 16:46:22 2018
+ : 
+Fri Feb  9 16:46:22 2018
+ : 
+Initialisation port serie... 
+Fri Feb  9 16:46:59 2018
+ : 
+Fri Feb  9 16:46:59 2018
+ : 
+Initialisation port serie... 
+Fri Feb  9 16:47:09 2018
+ : 
+Fri Feb  9 16:47:09 2018
+ : 
+Initialisation port serie... 
+Fri Feb  9 23:19:01 2018 : Erreur suppression SMS.
+Fri Feb  9 23:19:01 2018 : Initialisation port serie... 
+Fri Feb  9 23:19:01 2018 : Erreur init serie.
+Fri Feb  9 23:19:01 2018 : Initialisation module GSM... 
