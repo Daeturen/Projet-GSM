@@ -17,8 +17,9 @@ if(isset($_POST['boutonlog']))
     <link rel="stylesheet" href="design.css">
   </head>
   <body>
-	  <div>
+	  
 		  <h1>Configuration du serveur</h1>
+    <div>
     <p>
 	<?php
 	if($success)

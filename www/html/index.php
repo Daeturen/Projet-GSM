@@ -69,14 +69,14 @@ fclose($file_etatsys);
 
 <div>
 <form method="post" action="addnum.php?act=new">
-   <h3>Numéros de téléphone autorisés :</h3><br/>
+   <h3>Numéros de téléphone autorisés :</h3>
    <ul>
    <?php
    $count = 0;
    $file_num = fopen("cfg/numauto.cfg", "r");
 	if ($file_num) {
 		while (($numero = fgets($file_num, 4096)) !== false) {
-			echo '<li>'.$numero.' - <a href="addnum.php?act=del&id='.$count.'"><img src="bin.png" height=16 width=16 /></a></li> ';
+			echo '<li>'.$numero.'   <a href="addnum.php?act=del&id='.$numero.'"><img src="bin.png" height=16 width=16 /></a></li> ';
 			$count++;
 		}
 		if (!feof($file_num)) {

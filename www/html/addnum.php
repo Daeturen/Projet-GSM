@@ -1,26 +1,32 @@
 <?php 
-function remove_line($file, $remove) {
-    $lines = file($file, FILE_IGNORE_NEW_LINES);
-    foreach($lines as $key => $line) {
-        if($line === $remove) unset($lines[$key]);
-    }
-    $data = implode(PHP_EOL, $lines);
-    file_put_contents($file, $data);
-}
-
 $success = 0;
 if((isset($_POST['newnum'])) && ($_GET['act'] == "new"))
 {
 	$newnum = $_POST['newnum'];
 	if(is_numeric($newnum)) //contient uniquement nombre
 	{
-		if(strlen($newnum)==10)
+		if(strlen($newnum)==10) //format 0xxxx xxxxx
 		{
-			$file_num = fopen('cfg/numauto.cfg', 'a');
-			fputs($file_num,PHP_EOL.$newnum);
+			$liste_nums = "";
+			$num_read = "";
+			$file_num = fopen('cfg/numauto.cfg', 'r');
+			while (($num_read = fgets($file_num, 4096)) !== false) {
+			$liste_nums .= $num_read;			
+			}
 			fclose($file_num);
-			$success = 1;
-	
+			
+			if((strpos($liste_nums, $newnum) !== false)) // check doublons
+			{
+				$success = 0;
+			}
+			else
+			{
+				$file_num = fopen('cfg/numauto.cfg', 'a');
+				fputs($file_num,$newnum.PHP_EOL);
+				fclose($file_num);
+				$success = 1;
+			}
+		
 		}
 		else
 		{
@@ -35,12 +41,25 @@ if((isset($_POST['newnum'])) && ($_GET['act'] == "new"))
 }
 
 if($_GET['act'] == "del") {
-	$num = $_GET['id']; // TO INT
-		$file_num = fopen('cfg/numauto.cfg', 'a');
-		remove_line($file_num,$GET['id']);
-		fclose($file_num);
-		$success = 1;
+		
+	 $DELETE =  $_GET['id']; ;
+	 $data = file("cfg/numauto.cfg");
+	 $out = array();
 
+	 foreach($data as $line) {
+		 if(trim($line) != $DELETE) {
+			 $out[] = $line;
+		 }
+	 }
+	 $fp = fopen("cfg/numauto.cfg", "w+");
+	 flock($fp, LOCK_EX);
+	 foreach($out as $line) {
+		 fwrite($fp, $line);
+	 }
+	 flock($fp, LOCK_UN);
+	 fclose($fp);  
+
+	$success = 1;
 }
 
 ?>
